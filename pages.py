@@ -6,8 +6,13 @@ import json
 import pandas as pd
 import random
 import os
+import os
+from twilio.rest import Client
 import pandas
 THEME_COLOR = "#375362"
+ACCOUNT_SID='AC92f8a80446ce7ebe10430c9d9345c304'
+AUTH_TOKEN='dd691946b0e5f433126275d56e44df90'
+PHONE_NUMBER='+12765009311'
 
 class FrontPage:
     def __init__(self):
@@ -263,14 +268,15 @@ class AddStockPage:
 
 class SearchPage:
     def __init__(self,add_window,username,query):
+        # SEARCH PAGE
         self.add_window=add_window
         self.username=username
         self.added_stock={}
-        new_window=Toplevel(self.add_window)
-        new_window.title('Add Stock')
-        new_window.geometry('360x400')
-        new_window.config(background=THEME_COLOR,padx=10, pady=10)
-    # SEARCH PAGE
+        self.new_window=Toplevel(self.add_window)
+        self.new_window.title('Add Stock')
+        self.new_window.geometry('360x400')
+        self.new_window.config(background=THEME_COLOR,padx=10, pady=10)
+
 
         result = requests.get(url='https://api.sheety.co/0183eb27eded6d48cdbf2d53b83ddf3c/stockapp/sheet1')
         search_data = result.json()
@@ -282,35 +288,35 @@ class SearchPage:
         print(self.searched_data)
 
 
-        label = Label(new_window, text=f'Hello {self.searched_data["employee"]}')
+        label = Label(self.new_window, text=f'Hello {self.searched_data["employee"]}')
 
         label.pack()
         # Widgets
 
-        self.sold_amount = Label(new_window, text='How many sold ?:', background=THEME_COLOR, fg='white')
+        self.sold_amount = Label(self.new_window, text='How many sold ?:', background=THEME_COLOR, fg='white')
         self.sold_amount.place(x=30, y=50)
 
-        self.spinbox = Spinbox(new_window,from_=0, to=int(self.searched_data["quantityStock"]), width=5)
+        self.spinbox = Spinbox(self.new_window,from_=0, to=int(self.searched_data["quantityStock"]), width=5)
         self.spinbox.place(x=35, y=70, width=170)
 
-        self.product_code_label = Label(new_window, text=f'product Code: {self.searched_data["productCode"]}', background=THEME_COLOR, fg='white')
+        self.product_code_label = Label(self.new_window, text=f'product Code: {self.searched_data["productCode"]}', background=THEME_COLOR, fg='white')
         self.product_code_label.place(x=30, y=100)
 
 
-        self.product_quantity_label = Label(new_window, text=f'Product Quantity: {self.searched_data["productQuantity"]}', background=THEME_COLOR, fg='white')
+        self.product_quantity_label = Label(self.new_window, text=f'Product Quantity: {self.searched_data["productQuantity"]}', background=THEME_COLOR, fg='white')
         self.product_quantity_label.place(x=30, y=150)
 
 
-        self.stock_quantity_label = Label(new_window, text=f'Quantity in stock: {self.searched_data["quantityStock"]}', background=THEME_COLOR, fg='white')
+        self.stock_quantity_label = Label(self.new_window, text=f'Quantity in stock: {self.searched_data["quantityStock"]}', background=THEME_COLOR, fg='white')
         self.stock_quantity_label.place(x=30, y=200)
 
-        self.min_stock_level_label = Label(new_window, text=f'Minimum stock level:{self.searched_data["minimumStock"]}', background=THEME_COLOR, fg='white')
+        self.min_stock_level_label = Label(self.new_window, text=f'Minimum stock level:{self.searched_data["minimumStock"]}', background=THEME_COLOR, fg='white')
         self.min_stock_level_label.place(x=30, y=250)
 
-        self.cost_label = Label(new_window, text=f'Cost Price: {self.searched_data["costPrice"]}', background=THEME_COLOR, fg='white')
+        self.cost_label = Label(self.new_window, text=f'Cost Price: {self.searched_data["costPrice"]}', background=THEME_COLOR, fg='white')
         self.cost_label.place(x=30, y=300)
 
-        self.submit_button = Button(new_window, text='Submit',command=self.submit)
+        self.submit_button = Button(self.new_window, text='Submit',command=self.submit)
         self.submit_button.place(x=70, y=350)
 
 
@@ -318,7 +324,7 @@ class SearchPage:
 
         self.searched_data=self.searched_data
         self.updated_amount=self.searched_data['quantityStock']-int(self.spinbox.get())
-        print(self.updated_amount)
+
         updated_data={
             "sheet1": [{
                 "ProductName": self.searched_data['productName'],
@@ -337,7 +343,23 @@ class SearchPage:
                                json=updated_data)
 
         tkinter.messagebox.showinfo(title='Updated',message='Updated Succesfully')
+        self.send_notifications()
+        self.new_window.destroy()
 
 
+
+    def send_notifications(self):
+        if self.updated_amount <= int(self.searched_data['minimumStock']):
+            account_sid = ACCOUNT_SID
+            auth_token = AUTH_TOKEN
+            client = Client(account_sid, auth_token)
+            message = client.messages \
+                .create(
+                body=f"Product number:{self.searched_data['productCode']} is below minimum quantity. Currently: {self.updated_amount}",
+                from_=PHONE_NUMBER,
+                to='+447491904889'
+            )
+
+            print(message.sid)
 
 
