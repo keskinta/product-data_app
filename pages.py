@@ -10,8 +10,8 @@ import os
 from twilio.rest import Client
 import pandas
 THEME_COLOR = "#375362"
-ACCOUNT_SID='AC92f8a80446ce7ebe10430c9d9345c304'
-AUTH_TOKEN='dd691946b0e5f433126275d56e44df90'
+ACCOUNT_SID='HIDDEN'
+AUTH_TOKEN='HIDDEN'
 PHONE_NUMBER='+12765009311'
 
 class FrontPage:
